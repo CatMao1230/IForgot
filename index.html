@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>I forgot</title>
+    <style type="text/css">
+        body {
+            background-image: url(background.jpg);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+			
+        }
+        
+        div { /* 統一設定div元素樣式 */
+            position: absolute; /* 設定為絕對定位 */
+            background-color: transparent; /* 設定背景色透明 */
+            border: none; /* 沒有邊框 */
+            margin: 0px; /* 沒有邊距 */
+            padding: 0px; /* 沒有襯距 */
+        }
+
+        canvas { /* 統一設定canvas樣式 */
+            border: 0px dashed #c3c3c3; /* 設定邊框 */
+        }
+
+        #scoreCanvasWarp { /* 設定記分canvas樣式 */
+            z-index: 2; /* 設定層疊層次 */
+        }
+
+        #gameCanvasWarp { /* 設定遊戲canvas樣式 */
+            z-index: 1; /* 設定層疊層次 */
+        }
+    </style>
+    <script>
+        
+        var cxt,
+            scoreCxt,
+			picStart = new Image(),
+			picTitle = new Image(),
+			StartGame = false,
+			time = 3000, //隨題數下降 最低1000
+			score = 0, //分數
+			errorcount = 0, //錯誤次數
+            pic = new Array(48), //圖片陣列
+			Lock = new Array(6), //按鈕
+            now = 0, //選擇個數 最多三
+            count = 0, //對題目個數
+            answer = new Array(3), //選擇索引值
+            tempque = new Array(3), //題目索引值
+            question = new Array(47), //圖片索引值
+			audCorrect = new Audio("correct.mp3"),
+			audError = new Audio("error.mp3"),
+			audChoose = new Audio("choose.wav");
+		
+		
+		picStart.src = "start.png";
+		picTitle.src = "title.png";
+        
+		function SoundCorrect() {
+            audCorrect.play();
+        }
+		
+		function SoundError() {
+            audError.play();
+        }
+		
+		function SoundChoose() {
+            audChoose.play();
+        }
+		
+		//按鈕初始化
+		for (var i = 0; i <= 5; i++){
+			Lock[i] = true;
+		}
+		
+        //圖片讀取
+        for (var i = 1; i <= 48; i++) {
+            pic[i-1] = new Image();
+            pic[i-1].src = "pic (" + i + ").png";
+        }
+
+        //索引值初始化
+        for (var i = 0; i < 47; i++) {
+            question[i] = i;
+        }
+
+		function drawScore(){
+			cxt.clearRect(0,0,1120,800);
+			cxt.fillStyle = '#3d3d3d';
+            cxt.font = 'normal 60px fantasy';
+            cxt.textBaseline = 'top';
+            cxt.fillText("Score: " + score, 360, 370);
+			cxt.fillText("Error: " + errorcount, 600, 370);
+		}
+		
+        //取min~max亂數
+        function usefloor(min,max) {
+            return Math.floor(Math.random()*(max-min+1)+min);
+        }
+        
+        //洗牌
+        function Shuffle(){
+            //題目洗牌 取前三當題目
+            for(var i=1; i<=100; i++){
+                var a = usefloor(0, 46);
+                var b = usefloor(0, 46);
+                var temp = question[a];
+                question[a] = question[b];
+                question[b] = temp;
+            }
+            for(var i=0; i<3; i++){
+                tempque[i] = question[i];
+            }
+        }
+        
+        function ShuffleAgain(){
+            //題目洗牌 前五當選項
+            for(var i=1; i<=10; i++){
+                var a = usefloor(0, 4);
+                var b = usefloor(0, 4);
+                var temp = question[a];
+                question[a] = question[b];
+                question[b] = temp;
+            }
+        }
+        
+        //設定題目
+        function SetQuestion(){
+			
+			scoreCxt.clearRect(0, 0, 1120, 800);
+			drawScore();
+			for (var i = 0; i <= 5; i++){
+				Lock[i] = true;
+			}
+			
+			if(score >= 10){
+				time = 1000;
+			}
+			else if(score >= 5){
+				time = 2000;
+			}
+			else{
+				time = 3000;
+			}
+            
+            Shuffle();
+            
+            scoreCxt.drawImage(pic[question[0]], 160, 160);
+            scoreCxt.drawImage(pic[question[1]], 480, 160);
+            scoreCxt.drawImage(pic[question[2]], 800, 160);
+            scoreCxt.drawImage(pic[47], 80, 480);
+            scoreCxt.drawImage(pic[47], 280, 480);
+            scoreCxt.drawImage(pic[47], 480, 480);
+            scoreCxt.drawImage(pic[47], 680, 480);
+            scoreCxt.drawImage(pic[47], 880, 480);
+			
+            setTimeout(function(){
+                ShuffleAgain();
+                
+                scoreCxt.drawImage(pic[47], 160, 160);
+                scoreCxt.drawImage(pic[47], 480, 160);
+                scoreCxt.drawImage(pic[47], 800, 160);
+                
+                scoreCxt.drawImage(pic[question[0]], 80, 480);
+                scoreCxt.drawImage(pic[question[1]], 280, 480);
+                scoreCxt.drawImage(pic[question[2]], 480, 480);
+                scoreCxt.drawImage(pic[question[3]], 680, 480);
+                scoreCxt.drawImage(pic[question[4]], 880, 480);
+				
+				for (var i = 0; i <= 5; i++){
+					Lock[i] = false;
+				}
+            }, time);
+        }
+        
+        window.onload = function () {
+  
+            var canvas = document.getElementById("_2DCanvas");
+            if (canvas && canvas.getContext) {
+                cxt = canvas.getContext("2d");
+                canvas.addEventListener('mousedown', canvasMouseDownHandler, false);
+            }
+            if (scoreCanvas && scoreCanvas.getContext) {
+                scoreCxt = scoreCanvas.getContext("2d"); // 獲得繪圖環境
+                scoreCanvas.addEventListener('mousedown', canvasMouseDownHandler, false);
+				scoreCanvas.addEventListener('mouseup', canvasMouseUpHandler, false);
+            }
+            StartGame=false;
+			scoreCxt.drawImage(picTitle, 280, 100);
+            scoreCxt.drawImage(picStart, 250, 500);
+
+        }
+        
+        function CheckAns(){
+			for(var i = 0; i <= 5; i++){
+				Lock[i] = true;
+			}
+            count = 0;
+            now = 0;
+            for(var i = 0; i < 3; i++){
+                if(answer[i] == tempque[i]){
+                    count++;
+                }
+            }
+			setTimeout(function(){
+				for(var i = 0; i <= 5; i++){
+					Lock[i] = false;
+				}
+				if(count == 3){ //答對
+					SoundCorrect();
+					score++;
+					SetQuestion();
+				}
+				else{
+					SoundError();
+					errorcount++;
+					drawScore();
+					scoreCxt.drawImage(pic[47], 160, 160);
+					scoreCxt.drawImage(pic[47], 480, 160);
+					scoreCxt.drawImage(pic[47], 800, 160);
+					if(errorcount==3){ //Game Over
+						StartGame = false;
+						scoreCxt.clearRect(0, 0, 1120, 800);
+						cxt.clearRect(0, 0, 1120, 800);
+						scoreCxt.drawImage(picTitle, 280, 100);
+						scoreCxt.drawImage(picStart, 250, 500);
+						
+						cxt.fillStyle = '#3d3d3d';
+                        cxt.font = 'normal 60px fantasy';
+						cxt.textBaseline = 'top';
+						cxt.fillText("Your Score: " + score, 400, 400);
+					}
+				}
+			}, 1000);
+        }
+
+		function MouseDown(i){
+			if(!Lock[i]){
+				if(now==0){
+					scoreCxt.drawImage(pic[question[i]], 160, 160);
+				}
+				if(now==1){
+					scoreCxt.drawImage(pic[question[i]], 480, 160);
+				}
+				if(now==2){
+					scoreCxt.drawImage(pic[question[i]], 800, 160);
+				}
+				answer[now] = question[i];
+				Lock[i] = true;
+				now++;
+			}
+		}
+		
+        function canvasMouseDownHandler(evt) {
+			
+			SoundChoose();
+			var x, y;
+			x = evt.clientX;
+			y = evt.clientY;
+			
+			if(StartGame){
+				if(!Lock[5]){
+					if(480 <= y && y <= 640){
+						if(80 <= x && x <= 240){
+							scoreCxt.clearRect(80, 480, 170, 170);
+							scoreCxt.drawImage(pic[question[0]], 80, 483);
+						}
+						if(280 <= x && x <= 440){
+							scoreCxt.clearRect(280, 480, 170, 170);
+							scoreCxt.drawImage(pic[question[1]], 280, 483);
+
+						}
+						if(480 <= x && x <= 640){
+							scoreCxt.clearRect(480, 480, 170, 170);
+							scoreCxt.drawImage(pic[question[2]], 480, 483);
+						}
+						if(680 <= x && x <= 840){
+							scoreCxt.clearRect(680, 480, 170, 170);
+							scoreCxt.drawImage(pic[question[3]], 680, 483);
+						}
+						if(880 <= x && x <= 1040){
+							scoreCxt.clearRect(880, 480, 170, 170);
+							scoreCxt.drawImage(pic[question[4]], 880, 483);
+						}
+					}
+				}
+			}
+			else{
+				if(250<=x&&x<=810&&500<=y&&y<=630){
+					scoreCxt.clearRect(250, 500, 560, 140);
+					scoreCxt.drawImage(picStart, 250, 503);
+				}
+			}
+        }
+		
+		function canvasMouseUpHandler(evt){
+			var x, y;
+			x = evt.clientX;
+			y = evt.clientY;
+			
+			if(StartGame){
+				if(!Lock[5]){
+					scoreCxt.clearRect(80, 480, 1000, 170);
+					scoreCxt.drawImage(pic[question[0]], 80, 480);
+					scoreCxt.drawImage(pic[question[1]], 280, 480);
+					scoreCxt.drawImage(pic[question[2]], 480, 480);
+					scoreCxt.drawImage(pic[question[3]], 680, 480);
+					scoreCxt.drawImage(pic[question[4]], 880, 480);
+				}
+
+				if(480 <= y && y <= 640){
+					if(80 <= x && x <= 240){
+						MouseDown(0);
+					}
+					if(280 <= x && x <= 440){
+						MouseDown(1);
+					}
+					if(480 <= x && x <= 640){
+						MouseDown(2);
+					}
+					if(680 <= x && x <= 840){
+						MouseDown(3);
+					}
+					if(880 <= x && x <= 1040){
+						MouseDown(4);
+					}
+				}
+				if(now == 3){
+					CheckAns();
+				}
+			}
+			else{
+				scoreCxt.clearRect(250, 500, 560, 140);
+				scoreCxt.drawImage(picStart, 250, 500);
+				if(250<=x&&x<=810&&500<=y&&y<=630){
+					alert("上方會出現三張不同的圖片，請依序選出。");
+					StartGame=true;
+					score = 0;
+					errorcount = 0;
+					SetQuestion();
+				}
+			}
+		}
+        
+    </script>
+</head>
+<body>
+    <div id="scoreCanvasWarp">
+        <canvas id="scoreCanvas" width="1120" height="800">
+            流覽器如果不支援canvas元素，就顯示這行文字
+        </canvas>
+    </div>
+    <div id="gameCanvasWarp">
+        <canvas id="_2DCanvas" width="1120" height="800">
+            流覽器如果不支援canvas元素，就顯示這行文字
+        </canvas>
+    </div>
+</body>
+</html>
