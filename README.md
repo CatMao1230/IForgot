@@ -1,5 +1,6 @@
 # IForgot
-<h1><img class="alignnone  wp-image-99" src="https://catmaoblog.files.wordpress.com/2016/10/6lqz4de.png" alt="Icon made by Freepik from www.flaticon.com" width="40" height="40" /> <a href="https://catmaoblog.wordpress.com/2016/10/10/iforgot/" target="_blank">點我前往</a></h1>
+<h1><img class="alignnone  wp-image-99" src="https://catmaoblog.files.wordpress.com/2016/10/6lqz4de.png" alt="Icon made by Freepik from www.flaticon.com" width="40" height="40" /> <a href="https://catmao1230.github.io/IForgot/" target="_blank">點我前往</a></h1>
+<h1><img class="alignnone  wp-image-99" src="https://catmaoblog.files.wordpress.com/2016/10/6lqz4de.png" alt="Icon made by Freepik from www.flaticon.com" width="40" height="40" /> <a href="https://catmaoblog.wordpress.com/2016/10/10/iforgot/" target="_blank">WordPress</a></h1>
 <h1><img class="alignnone  wp-image-94" src="https://catmaoblog.files.wordpress.com/2016/10/jjbk5s5.png" alt="Icon made by Vectors Market from www.flaticon.com" width="40" height="40" /> 玩法解說</h1>
 畫面中總共有八張卡片，上三下五，上排為題目，下排為答題區。
 
